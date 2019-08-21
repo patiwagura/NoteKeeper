@@ -1,4 +1,6 @@
 <resources>
     <string name="app_name">NoteKeeper</string>
+    <string name="title_activity_note_list">Note List Activity</string>
     <string name="title_activity_note">Edit Note</string>
+    <string name="editNote">Edit Note</string>
 </resources>
