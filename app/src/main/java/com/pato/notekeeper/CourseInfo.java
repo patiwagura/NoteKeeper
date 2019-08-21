@@ -11,16 +11,27 @@ import java.util.List;
  * Created by Jim.
  */
 
-public final class CourseInfo {
-    private final String mCourseId;
-    private final String mTitle;
-    private final List<ModuleInfo> mModules;
+public final class CourseInfo implements Parcelable {
+    private String mCourseId;
+    private String mTitle;
+    private List<ModuleInfo> mModules;
 
     //constructor.
     public CourseInfo(String courseId, String title, List<ModuleInfo> modules) {
         mCourseId = courseId;
         mTitle = title;
         mModules = modules;
+    }
+
+    private CourseInfo(Parcel parcelSource) {
+        //this constructor should be private to prevent access outside this class.
+        //read the data from parcel in the order they were written.
+        //mModules = parcelSource.readParcelable(ModuleInfo.class.getClassLoader()); //CLASS Loader provides information to create instance of a type.
+        parcelSource.readList(mModules, ModuleInfo.class.getClassLoader());  //read List : OPTION 1
+        //parcelSource.readTypedList(mModules, ModuleInfo.CREATOR);  //read List :OPTION 2.
+        //parcelSource.readList(mModules, List.class.getClassLoader()); //Read List : OPTION 3.
+        mTitle = parcelSource.readString(); //read title from parcel.
+        mCourseId = parcelSource.readString(); //read text from parcel.
     }
 
     public String getCourseId() {
@@ -78,4 +89,37 @@ public final class CourseInfo {
         return mCourseId.hashCode();
     }
 
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel parcelDest, int flags) {
+        //handles the details of writing the content/data to parcel.
+        //parcelDest.writeParcelable(mModules, 0); //write a parcelable reference.
+        parcelDest.writeList(mModules);         //write a List to parcel :OPTION 1.
+        //parcelDest.writeTypedList(mModules);  //write a List to parcel :OPTION 2.
+        //write primitive types e.g string
+        parcelDest.writeString(mTitle); //write note_title.
+        parcelDest.writeString(mCourseId);  //write note_text
+
+    }
+
+    //code to recreate this class_instance from the parcel.
+    //Note: Read parcel values in the same order they were written.
+    public static final Parcelable.Creator<CourseInfo> CREATOR = new Parcelable.Creator<CourseInfo>() {
+
+        @Override
+        public CourseInfo createFromParcel(Parcel parcelSource) {
+            //common practice is to use a private constructor re-create the instance and set member variables.
+            return new CourseInfo(parcelSource);
+        }
+
+        @Override
+        public CourseInfo[] newArray(int size) {
+            //newArray(int size) creates an array of type <NoteInfo> of the specified size.
+            return new CourseInfo[size];
+        }
+    };
 }

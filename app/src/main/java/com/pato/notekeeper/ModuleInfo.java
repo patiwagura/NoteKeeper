@@ -7,7 +7,7 @@ import android.os.Parcelable;
  * Created by Jim.
  */
 
-public final class ModuleInfo {
+public final class ModuleInfo implements Parcelable {
     private final String mModuleId;
     private final String mTitle;
     private boolean mIsComplete = false;
@@ -20,6 +20,14 @@ public final class ModuleInfo {
         mModuleId = moduleId;
         mTitle = title;
         mIsComplete = isComplete;
+    }
+
+    //called to recreate the instance of the object from the Parcel.
+    private ModuleInfo(Parcel in) {
+        mModuleId = in.readString();
+        mTitle = in.readString();
+        //mIsComplete = in.readByte() != 0;
+        mIsComplete = (in.readInt() == 1);  //read from parcel, check if value = 1 assign true else assign false.
     }
 
     public String getModuleId() {
@@ -58,4 +66,34 @@ public final class ModuleInfo {
         return mModuleId.hashCode();
     }
 
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel parcelDest, int flags) {
+        //handles the details of writing the variables/data to parcel.
+
+        //parcelDest.writeParcelable(mModules, 0); //write a parcelable reference.
+        //write primitive types e.g string
+        parcelDest.writeString(mModuleId); //write module_id
+        parcelDest.writeString(mTitle); //write note_title.
+        //write a boolean to parcel, convert boolean to int using logic true=1 : false =0 .
+        parcelDest.writeInt(mIsComplete ? 1 : 0);  //check if mIscomplete is true . write 1 else write 0.
+    }
+
+    //code to recreate this class_instance from the parcel.
+    //Note: Read parcel values in the same order they were written.
+    public static final Creator<ModuleInfo> CREATOR = new Creator<ModuleInfo>() {
+        @Override
+        public ModuleInfo createFromParcel(Parcel in) {
+            return new ModuleInfo(in);
+        }
+
+        @Override
+        public ModuleInfo[] newArray(int size) {
+            return new ModuleInfo[size];
+        }
+    };
 }
