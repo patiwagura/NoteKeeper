@@ -1,5 +1,7 @@
 package com.pato.notekeeper;
 
+import android.arch.lifecycle.ViewModel;
+import android.arch.lifecycle.ViewModelProvider;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -24,6 +26,16 @@ public class NoteActivity extends AppCompatActivity {
     private Spinner mSpinnerCourses;
     private int mNotePosition;
     private boolean mIsCancelling;  //if true user want to exit without saving changes.
+    /**
+     * moved to NoteActivityViewModel class.
+     */
+//    private String mOriginalNoteCourseId;
+//    private String mOriginalNoteTitle;
+//    private String mOriginalNoteText;
+
+    //instance to ViewModel.
+    private NoteActivityViewModel mViewModel;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,6 +43,20 @@ public class NoteActivity extends AppCompatActivity {
         setContentView(R.layout.activity_note);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        //ViewModel is managed by ViewModelProvider.
+        ViewModelProvider viewModelProvider = new ViewModelProvider(getViewModelStore(),
+                ViewModelProvider.AndroidViewModelFactory.getInstance(getApplication()));
+        mViewModel = viewModelProvider.get(NoteActivityViewModel.class); //class extending ViewModel class.
+
+        //method used to restore saved activity_instance state.
+        if (mViewModel.mIsNewlyCreated && savedInstanceState != null) {
+            //For device configuration change e.g portrait to landscape use ViewModel to restore and save state.
+            //we only need to restore state from Bundle:savedInstanceState, when activity is destroyed along with the ViewModel.
+            mViewModel.restoreState(savedInstanceState);
+        }
+
+        mViewModel.mIsNewlyCreated = false;
 
         //get reference to EditText
         mTxtNoteTitle = findViewById(R.id.text_note_title);
@@ -46,11 +72,23 @@ public class NoteActivity extends AppCompatActivity {
 
         //method to retrieve object_instance from intent extras and display.
         readDisplayStateValues();
+        saveOriginalNoteValues();
 
         //method to display a note. Only displayNote when there is a note.
         if (!mIsNewNote)
             displayNote(mSpinnerCourses, mTxtNoteTitle, mTxtNoteText);
 
+    }
+
+    private void saveOriginalNoteValues() {
+        //method to save original note Values.
+        if (mIsNewNote) {
+            return;  //if its a new note we have nothing to save. exit.
+        }
+        //we are saving original note values to NoteActivityViewModel which is maintained separately from activity.
+        mViewModel.mOriginalNoteCourseId = mSelectedNote.getCourse().getCourseId();
+        mViewModel.mOriginalNoteTitle = mSelectedNote.getTitle();
+        mViewModel.mOriginalNoteText = mSelectedNote.getText();
     }
 
     private void displayNote(Spinner spinnerCourses, EditText txtNoteTitle, EditText txtNoteText) {
@@ -123,12 +161,36 @@ public class NoteActivity extends AppCompatActivity {
         //when user exits Activity by hitting Back_button, we save changes made by user.
         if (mIsCancelling) {
             //user want to exit without saving changes.
-            if(mIsNewNote)
+            if (mIsNewNote) {
                 DataManager.getInstance().removeNote(mNotePosition);//remove newNote_position if user cancels in the process of creating a new note.
+            } else {
+                //restore Previous note values ie original note before change.
+                restorePreviousNoteValues();
+            }
         } else {
             saveNote(); //save any changes.
         }
 
+    }
+
+    /**
+     * @param outState
+     */
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (outState != null) {
+            //save instance state if the bundle is not null.
+            mViewModel.saveState(outState);
+        }
+    }
+
+    private void restorePreviousNoteValues() {
+        //method to restore original note values when user cancels a note before saving the note.
+        CourseInfo prevCourse = DataManager.getInstance().getCourse(mViewModel.mOriginalNoteCourseId);
+        mSelectedNote.setCourse(prevCourse); //restore previous course.
+        mSelectedNote.setTitle(mViewModel.mOriginalNoteTitle); //original note Title.
+        mSelectedNote.setText(mViewModel.mOriginalNoteText);  //original note text.
     }
 
     private void saveNote() {
