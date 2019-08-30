@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -16,6 +17,7 @@ import android.widget.Spinner;
 import java.util.List;
 
 public class NoteActivity extends AppCompatActivity {
+    private final String TAG = getClass().getSimpleName();  //TAG CONSTANT.
     //Qualify the constant with the package name to make it unique, to differentiate other constants used somewhere in code.
     public static final String NOTE_POSITION = "com.pato.notekeeper.NOTE_POSITION"; //constant pointing to the position of the selected Note.
     public static final int POSITION_NOT_SET = -1;  //position was not set.
@@ -77,6 +79,7 @@ public class NoteActivity extends AppCompatActivity {
         //method to display a note. Only displayNote when there is a note.
         if (!mIsNewNote)
             displayNote(mSpinnerCourses, mTxtNoteTitle, mTxtNoteText);
+        Log.d(TAG, "onCreate");
 
     }
 
@@ -105,17 +108,18 @@ public class NoteActivity extends AppCompatActivity {
     private void readDisplayStateValues() {
         Intent myIntent = getIntent(); //get intent that started this activity.
         //mSelectedNote = myIntent.getParcelableExtra(NOTE_POSITION);  //recreate the note that was passed as an intent Extra.
-        int notePosition = myIntent.getIntExtra(NOTE_POSITION, POSITION_NOT_SET); //value-type Extras require a second_param as default value.
+        mNotePosition = myIntent.getIntExtra(NOTE_POSITION, POSITION_NOT_SET); //value-type Extras require a second_param as default value.
 
-        //Logic: if we don't pass an intent Extra mSelectedNote is null hence isNewNote = true, else isNewNote = false.
+        //Logic: if we don't pass Note_position, default = -1, hence isNewNote = true, else isNewNote = false.
         //mIsNewNote = mSelectedNote == null;
-        mIsNewNote = notePosition == POSITION_NOT_SET;
+        mIsNewNote = mNotePosition == POSITION_NOT_SET;
         //check if we are not creating new note, retrieve the note.
         if (mIsNewNote) {
-            createNewNote(); //handle create new note.
-        } else {
-            mSelectedNote = DataManager.getInstance().getNotes().get(notePosition); //get note at position specified.
+            createNewNote(); //create a newNote and set new note_position index.
         }
+
+        Log.i(TAG,"initial mNotePosition : " + mNotePosition);
+        mSelectedNote = DataManager.getInstance().getNotes().get(mNotePosition); //get note at position specified.
 
     }
 
@@ -124,7 +128,7 @@ public class NoteActivity extends AppCompatActivity {
         DataManager dm = DataManager.getInstance(); //get instance.
         //create a new note and return its position.
         mNotePosition = dm.createNewNote();
-        mSelectedNote = dm.getNotes().get(mNotePosition); //retrive not from List using index_notePosition.
+        //mSelectedNote = dm.getNotes().get(mNotePosition); //retrive not from List using index_notePosition.
 
     }
 
@@ -160,6 +164,7 @@ public class NoteActivity extends AppCompatActivity {
         super.onPause();
         //when user exits Activity by hitting Back_button, we save changes made by user.
         if (mIsCancelling) {
+            Log.i(TAG, "Cancelling note at position : " + mNotePosition);
             //user want to exit without saving changes.
             if (mIsNewNote) {
                 DataManager.getInstance().removeNote(mNotePosition);//remove newNote_position if user cancels in the process of creating a new note.
@@ -170,12 +175,11 @@ public class NoteActivity extends AppCompatActivity {
         } else {
             saveNote(); //save any changes.
         }
+        Log.d(TAG,"onPause");
 
     }
 
-    /**
-     * @param outState
-     */
+
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
