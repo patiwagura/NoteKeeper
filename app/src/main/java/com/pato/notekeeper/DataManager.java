@@ -42,6 +42,16 @@ public class DataManager {
         return mNotes.size() - 1;
     }
 
+    public int createNewNote(CourseInfo course, String noteTitle, String noteText) {
+        int index = createNewNote(); //using overloaded method.
+        NoteInfo note = getNotes().get(index); //get note at index.
+        note.setCourse(course);
+        note.setTitle(noteTitle);
+        note.setText(noteText);
+
+        return index; //Start by making the test-fail by returning an invalid index e.g -1
+    }
+
     public int findNote(NoteInfo note) {
         for(int index = 0; index < mNotes.size(); index++) {
             if(note.equals(mNotes.get(index)))
@@ -197,7 +207,8 @@ public class DataManager {
 
         return new CourseInfo("java_core", "Java Fundamentals: The Core Platform", modules);
     }
-     //initialize the courses -end------------------
+
+    //initialize the courses -end------------------
      
     //endregion
 
