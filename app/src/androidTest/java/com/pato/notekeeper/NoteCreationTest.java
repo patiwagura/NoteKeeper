@@ -17,6 +17,7 @@ import static android.support.test.espresso.action.ViewActions.*;
 import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
 import static org.hamcrest.Matchers.*;
 import static android.support.test.espresso.Espresso.pressBack;
+import static android.support.test.espresso.assertion.ViewAssertions.*;
 
 @RunWith(AndroidJUnit4.class)
 public class NoteCreationTest {
@@ -34,24 +35,35 @@ public class NoteCreationTest {
     @Test
     public void createNewNote() {
         //Method to test create new note.
-        //ViewInteraction fabNewNote = onView(withId(R.id.fab));
-        //fabNewNote.perform(click());
-
-        final CourseInfo course = sDataMgr.getCourse("java_lang");
+        final CourseInfo course = sDataMgr.getCourse("java_lang");  //select a course.
         final String noteTitle = "Test note title";
         final String noteText = "This is the body of our test note";
 
-        onView(withId(R.id.fab)).perform(click());  //click our fab to create new Note.
-        //make a selection from our spinner. We match on both actual-value and Typeof reference ="courseInfo"
+        onView(withId(R.id.fab)).perform(click());  //click our fab-button to create new Note, NoteActivity is displayed.
         //Note we have to click on spinner, then make the selection.
         onView(withId(R.id.spinner_courses)).perform(click());
-        onData(allOf(instanceOf(CourseInfo.class), equalTo(course))).perform(click());
+        onData(allOf(instanceOf(CourseInfo.class), equalTo(course))).perform(click());  //Selected course should match a Type-of:courseInfo and actual-value=selected_course.
+        onView(withId(R.id.spinner_courses)).check(matches(withSpinnerText(containsString(course.getTitle())))); //verify UI behavior, ensure spinner displays selected courseTitle.
 
-        onView(withId(R.id.text_note_title)).perform(typeText(noteTitle));
-        //Note: perform method takes variable-length argument list e.g more than one parameters.
+        //we can perform an action and immediately check without having to repeat the onView to get the ViewInteraction.
+        // Perform just like onView returns a ViewInteraction.
+        onView(withId(R.id.text_note_title)).perform(typeText(noteTitle))
+                .check(matches(withText(containsString(noteTitle))));
+        //Note: perform method takes variable-length/more than one argument list
         onView(withId(R.id.text_note_text)).perform(typeText(noteText),
                 closeSoftKeyboard());
-        pressBack();  //leave Activity when we complete test.
+        //checking if the tests met expectaction.
+        onView(withId(R.id.text_note_text)).check(matches(withText(containsString(noteText)))); //text-property contains our string.
+
+        pressBack();  //PressBack to Leave Activity when we complete test.
+
+        //android saves changes when back-button is pressed.
+        //We have to verify Logic to make sure the application did the right thing.
+        int noteIndex = sDataMgr.getNotes().size() -1;  //The last saved note is on last-index on list.
+        NoteInfo note = sDataMgr.getNotes().get(noteIndex);
+        assertEquals(course, note.getCourse());
+        assertEquals(noteTitle, note.getTitle());
+        assertEquals(noteText, note.getText());
     }
 
 }
