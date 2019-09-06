@@ -4,6 +4,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.AdapterView;
@@ -14,7 +16,7 @@ import java.util.List;
 
 public class NoteListActivity extends AppCompatActivity {
 
-    private ArrayAdapter<NoteInfo> mAdapterNotes;
+    //private ArrayAdapter<NoteInfo> mAdapterNotes;  //ArrayAdapter used with ListView.
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +39,8 @@ public class NoteListActivity extends AppCompatActivity {
     }
 
     private void initializeDisplayContent() {
+        //Commented this code as it was used with ListView. Recycler View is different.
+       /*
        final ListView listNotes = findViewById(R.id.list_notes); //listView reference.
         List<NoteInfo> notes = DataManager.getInstance().getNotes();  //get notes.
         //create an adapter.
@@ -58,7 +62,20 @@ public class NoteListActivity extends AppCompatActivity {
 
             }
         });
+        */
 
+        //Components we need for RecyclerView implementation / Initialization.
+        // 1. LayoutManager
+        // 2. Design Item View Layout (used to style individual View-items of the recyclerView)
+        // 3. Adapter.
+        final RecyclerView recyclerNotes = (RecyclerView)findViewById(R.id.recycler_list_notes);
+        final LinearLayoutManager notesLayoutMgr = new LinearLayoutManager(this); //create a Layout Manager.
+        recyclerNotes.setLayoutManager(notesLayoutMgr);
+
+        //adapter
+        List<NoteInfo> notes = DataManager.getInstance().getNotes();
+        final NoteRecyclerAdapter noteRecyclerAdapter = new NoteRecyclerAdapter(this, notes);
+        recyclerNotes.setAdapter(noteRecyclerAdapter);
     }
 
     @Override
@@ -72,6 +89,6 @@ public class NoteListActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         //notify arrayAdapter that data set has changed.
-        mAdapterNotes.notifyDataSetChanged();
+        //mAdapterNotes.notifyDataSetChanged();
     }
 }
