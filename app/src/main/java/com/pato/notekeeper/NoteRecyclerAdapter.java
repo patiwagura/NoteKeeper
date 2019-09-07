@@ -1,6 +1,7 @@
 package com.pato.notekeeper;
 
 import android.content.Context;
+import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -26,17 +27,18 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
         //This method will inflate or create a view instance and store information about the created view in a ViewHolder.
+        //We inflate a view-Item, create a new ViewHolder instance and associate the view-item with the ViewHolder.
         View itemView = mLayoutInflater.inflate(R.layout.item_note_list, viewGroup, false);  //create a viewItem
         return new ViewHolder(itemView);  //create the ViewHolder.
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder viewHolder, int position) {
-        //bind data to view-items.
-        //This method is called by RecyclerView to request for data to display at specified position.
+        //// bind data to view-items. This method is called by RecyclerView to request for data to display at the specified position.
         NoteInfo note = mNotes.get(position);  //get note at position.
         viewHolder.mTextCourse.setText(note.getCourse().getTitle()); //set courseTitle.
         viewHolder.mTextCourse.setText(note.getTitle());
+        viewHolder.mCurrentPosition = position; //setting position of data-item in the list.
 
     }
 
@@ -52,12 +54,23 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
         //make the fields public to be accessed by outer-class.
         public final TextView mTextCourse;
         public final TextView mTextTitle;
+        public int mCurrentPosition;  //set each time a view-item is associated with a viewHolder.
 
         //constructor matching super.
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             mTextCourse = (TextView) itemView.findViewById(R.id.text_course);
             mTextTitle = (TextView) itemView.findViewById(R.id.text_title);
+
+            //set an itemClick Listener.
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent myIntent = new Intent(mContext, NoteActivity.class);
+                    myIntent.putExtra(NoteActivity.NOTE_POSITION, mCurrentPosition);  //current position of selected data-item.
+                    mContext.startActivity(myIntent);
+                }
+            });
         }
     }
 }

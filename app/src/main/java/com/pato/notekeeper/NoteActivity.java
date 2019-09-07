@@ -84,7 +84,7 @@ public class NoteActivity extends AppCompatActivity {
     }
 
     private void saveOriginalNoteValues() {
-        //method to save original note Values.
+        //method to save original note Values, to the Model.
         if (mIsNewNote) {
             return;  //if its a new note we have nothing to save. exit.
         }
@@ -144,19 +144,42 @@ public class NoteActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // called when we select a menuItem.
-        int id = item.getItemId(); //get id of selected menuItem.
+        int mnuItemId = item.getItemId(); //get id of selected menuItem.
 
-        if (id == R.id.action_send_mail) {
+        if (mnuItemId == R.id.action_send_mail) {
             //send email action.
             sendEmail();
             return true;
-        } else if (id == R.id.action_cancel) {
+        } else if (mnuItemId == R.id.action_cancel) {
             //user wants to cancel without saving the changes.
             mIsCancelling = true;
             finish(); //signal activity to exit.
             return true;
+        } else if (mnuItemId == R.id.action_next){
+            //move to the next item in the list.
+            moveNext();
+            return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuItem mnuItem = menu.findItem(R.id.action_next);
+        int lastNoteIndex = DataManager.getInstance().getNotes().size() - 1; //lastIndex is size - 1.
+        mnuItem.setEnabled(mNotePosition < lastNoteIndex); //if mNotePosition is less than lastNoteIdex = true enable menuItem else disable
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    private void moveNext() {
+        saveNote();  //save currently selected-note, before we moveNext().
+        ++mNotePosition;  //increment note Position to move to next note.
+        mSelectedNote = DataManager.getInstance().getNotes().get(mNotePosition); //retrieve Note at new position.
+        saveOriginalNoteValues();
+        displayNote(mSpinnerCourses, mTxtNoteTitle, mTxtNoteText);
+
+        //schedule a call to onPrepareOptionsMenu to enable / disable Next menuItem.
+        invalidateOptionsMenu();
     }
 
     @Override

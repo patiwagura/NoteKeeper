@@ -1,9 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/action_send_mail"
-        android:title="Send as email" />
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/action_cancel"
-        android:title="Cancel" />
+        android:icon="@android:drawable/ic_menu_revert"
+        android:title="@string/cancel"
+        app:showAsAction="ifRoom|withText" />
+    <item
+        android:id="@+id/action_next"
+        android:icon="@android:drawable/ic_media_next"
+        android:title="@string/next"
+        app:showAsAction="ifRoom|withText" />
+    <item
+        android:id="@+id/action_send_mail"
+        android:title="@string/send_as_email" />
 
 </menu>
