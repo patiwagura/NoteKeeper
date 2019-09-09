@@ -1,8 +1,11 @@
 package com.pato.notekeeper;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.support.v4.view.GravityCompat;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -14,8 +17,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 
+import java.util.List;
+
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
+    private NoteRecyclerAdapter mNoteRecyclerAdapter;
+    private RecyclerView mRecyclerItems;
+    private LinearLayoutManager mNotesLayoutMgr;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,8 +35,8 @@ public class MainActivity extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                //create a new note
+                startActivity(new Intent(MainActivity.this, NoteActivity.class));
             }
         });
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
@@ -38,6 +46,44 @@ public class MainActivity extends AppCompatActivity
         drawer.addDrawerListener(toggle);
         toggle.syncState();
         navigationView.setNavigationItemSelectedListener(this);
+
+        initializeDisplayContent();
+    }
+
+
+    private void initializeDisplayContent() {
+
+        //Components we need for RecyclerView implementation / Initialization.
+        // 1. LayoutManager
+        // 2. Design Item-View Layout (used to style individual View-items of the recyclerView)
+        // 3. Adapter.
+        mRecyclerItems = (RecyclerView) findViewById(R.id.recycler_list_items);
+        //create a Layout Manager.
+        mNotesLayoutMgr = new LinearLayoutManager(this);
+        List<NoteInfo> notes = DataManager.getInstance().getNotes();
+        mNoteRecyclerAdapter = new NoteRecyclerAdapter(this, notes);  //create the Recycler-Adapter.
+
+        displayNotes();
+
+    }
+
+    private void displayNotes() {
+        //method to display notes.
+        mRecyclerItems.setLayoutManager(mNotesLayoutMgr);
+        mRecyclerItems.setAdapter(mNoteRecyclerAdapter);
+
+        //menu -groups allows a single item to be selected. in this case we want to select notes.
+        NavigationView myNavView = (NavigationView)findViewById(R.id.nav_view); //root element of navigation view.
+        Menu myMenu = myNavView.getMenu(); //get menu contained within navigationView.
+        myMenu.findItem(R.id.nav_notes).setChecked(true); //display the menu as the current selected option.
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        //Notify RecyclerAdapter datachanged, refresh our data every time we resume activity.
+        mNoteRecyclerAdapter.notifyDataSetChanged();
     }
 
     @Override
@@ -78,22 +124,28 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_home) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
-
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_tools) {
+        if (id == R.id.nav_notes) {
+            //handle notes action.
+            //handleSelection("Notes");
+            displayNotes();
+        } else if (id == R.id.nav_courses) {
+            handleSelection("Courses");
 
         } else if (id == R.id.nav_share) {
+            handleSelection("Don't you think you've shared enough. ");
 
         } else if (id == R.id.nav_send) {
-
+            handleSelection("Send");
         }
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void handleSelection(String message) {
+        //a snackbar needs a view from the current activity.
+        View view = findViewById(R.id.recycler_list_items);
+        Snackbar.make(view, message, Snackbar.LENGTH_LONG).show();
     }
 }
