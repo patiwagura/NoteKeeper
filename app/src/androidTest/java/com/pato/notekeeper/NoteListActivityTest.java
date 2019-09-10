@@ -47,7 +47,7 @@ public class NoteListActivityTest {
     @Test
     public void noteListActivityTest() {
         DataInteraction appCompatTextView = onData(anything())
-                .inAdapterView(allOf(withId(R.id.list_notes),
+                .inAdapterView(allOf(withId(R.id.recycler_list_notes),
                         childAtPosition(
                                 withClassName(is("android.support.constraint.ConstraintLayout")),
                                 0)))

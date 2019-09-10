@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
@@ -24,6 +25,8 @@ public class MainActivity extends AppCompatActivity
     private NoteRecyclerAdapter mNoteRecyclerAdapter;
     private RecyclerView mRecyclerItems;
     private LinearLayoutManager mNotesLayoutMgr;
+    private GridLayoutManager mCoursesLayoutMgr;
+    private CourseRecyclerAdapter mCourseRecyclerAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,25 +61,41 @@ public class MainActivity extends AppCompatActivity
         // 2. Design Item-View Layout (used to style individual View-items of the recyclerView)
         // 3. Adapter.
         mRecyclerItems = (RecyclerView) findViewById(R.id.recycler_list_items);
-        //create a Layout Manager.
-        mNotesLayoutMgr = new LinearLayoutManager(this);
+        mNotesLayoutMgr = new LinearLayoutManager(this);  //Notes Layout Manager.
+        mCoursesLayoutMgr = new GridLayoutManager(this, 2);  //Courses Layout manager-Using Grid Layout.
+
+        //Initialize Notes-List and Notes_Adapter.
         List<NoteInfo> notes = DataManager.getInstance().getNotes();
         mNoteRecyclerAdapter = new NoteRecyclerAdapter(this, notes);  //create the Recycler-Adapter.
 
-        displayNotes();
+        //Initialize courses and course-Adapter.
+        List<CourseInfo> courses = DataManager.getInstance().getCourses();
+        mCourseRecyclerAdapter = new CourseRecyclerAdapter(this, courses);
 
+        displayNotes();
     }
 
     private void displayNotes() {
-        //method to display notes.
+        //method to display notes. Set-up NotesAdapter and the LayoutManager to display Notes.
         mRecyclerItems.setLayoutManager(mNotesLayoutMgr);
         mRecyclerItems.setAdapter(mNoteRecyclerAdapter);
+        selectNavigationMenuItem(R.id.nav_notes); //Highlight Notes as current selected-MenuItem.
+    }
 
-        //menu -groups allows a single item to be selected. in this case we want to select notes.
-        NavigationView myNavView = (NavigationView)findViewById(R.id.nav_view); //root element of navigation view.
+    private void displayCourses() {
+        //method responsible to display Courses. set-up the Adapter and Layout manager to display courses.
+        mRecyclerItems.setLayoutManager(mCoursesLayoutMgr);
+        mRecyclerItems.setAdapter(mCourseRecyclerAdapter);
+
+        selectNavigationMenuItem(R.id.nav_courses); //Highlight courses as current selected-MenuItem.
+    }
+
+
+    private void selectNavigationMenuItem(int mnuItemId) {
+        //menu -groups allows a single item to be selected. In this case we want to highlight the current-selected menuItem.
+        NavigationView myNavView = (NavigationView) findViewById(R.id.nav_view); //root element of navigation view.
         Menu myMenu = myNavView.getMenu(); //get menu contained within navigationView.
-        myMenu.findItem(R.id.nav_notes).setChecked(true); //display the menu as the current selected option.
-
+        myMenu.findItem(mnuItemId).setChecked(true); //display the menu as the current selected option.
     }
 
     @Override
@@ -129,7 +148,7 @@ public class MainActivity extends AppCompatActivity
             //handleSelection("Notes");
             displayNotes();
         } else if (id == R.id.nav_courses) {
-            handleSelection("Courses");
+            displayCourses();
 
         } else if (id == R.id.nav_share) {
             handleSelection("Don't you think you've shared enough. ");
