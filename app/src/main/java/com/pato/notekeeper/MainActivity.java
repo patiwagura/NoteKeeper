@@ -62,7 +62,9 @@ public class MainActivity extends AppCompatActivity
         // 3. Adapter.
         mRecyclerItems = (RecyclerView) findViewById(R.id.recycler_list_items);
         mNotesLayoutMgr = new LinearLayoutManager(this);  //Notes Layout Manager.
-        mCoursesLayoutMgr = new GridLayoutManager(this, 2);  //Courses Layout manager-Using Grid Layout.
+        //Courses Layout manager-Using Grid Layout. we specify the column_span using a resource. helps in code adaptability.
+        mCoursesLayoutMgr = new GridLayoutManager(this,
+                getResources().getInteger(R.integer.course_grid_span));
 
         //Initialize Notes-List and Notes_Adapter.
         List<NoteInfo> notes = DataManager.getInstance().getNotes();
@@ -151,10 +153,12 @@ public class MainActivity extends AppCompatActivity
             displayCourses();
 
         } else if (id == R.id.nav_share) {
-            handleSelection("Don't you think you've shared enough. ");
+            //handleSelection(getString(R.string.nav_share_message));
+            handleSelection(R.string.nav_share_message);
 
         } else if (id == R.id.nav_send) {
-            handleSelection("Send");
+            //handleSelection(getString(R.string.nav_send_message));
+            handleSelection(R.string.nav_send_message);
         }
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
@@ -162,9 +166,9 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    private void handleSelection(String message) {
+    private void handleSelection(int message_id) {
         //a snackbar needs a view from the current activity.
         View view = findViewById(R.id.recycler_list_items);
-        Snackbar.make(view, message, Snackbar.LENGTH_LONG).show();
+        Snackbar.make(view, message_id, Snackbar.LENGTH_LONG).show();
     }
 }
