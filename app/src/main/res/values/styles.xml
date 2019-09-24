@@ -6,6 +6,12 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+
+        <!--testing textsize.-->
+        <!--<item name="android:textSize">50sp</item>-->
+
+        <!-- AppTheme is used as the default application Theme. WeirdEditText is a custom-style for editTexts. used inside another style. -->
+        <item name="editTextStyle">@style/WeirdEditText</item>
     </style>
 
     <style name="AppTheme.NoActionBar">
@@ -13,11 +19,18 @@
         <item name="windowNoTitle">true</item>
     </style>
 
+    <!--declaring a style and referencing it in a theme -->
+    <style name="WeirdEditText" parent="Widget.AppCompat.EditText">
+        <!--Using android in-built colors (green & Red). -->
+        <item name="android:textColor">@android:color/holo_green_dark</item>
+        <item name="android:textColorHint">@android:color/holo_red_dark</item>
+    </style>
+
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
-    <!-- CourseTitle Style inherits from built-in Material.medium material style. -->
+    <!-- CourseTitle Style inherits from android built-in Material.medium material style. -->
     <style name="CourseTitle" parent="@android:style/TextAppearance.Material.Medium">
         <item name="android:textColor">@color/pluralsight_orange</item>
         <item name="android:textStyle">bold</item>
