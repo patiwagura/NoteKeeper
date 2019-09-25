@@ -2,6 +2,7 @@ package com.pato.notekeeper;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -38,6 +39,7 @@ public class MainActivity extends AppCompatActivity
     private LinearLayoutManager mNotesLayoutMgr;
     private GridLayoutManager mCoursesLayoutMgr;
     private CourseRecyclerAdapter mCourseRecyclerAdapter;
+    private NoteKeeperOpenHelper mDbOpenHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +47,10 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        //instance to DatabaseOpenHelper. Interacting with Database is resource intensive.
+        mDbOpenHelper = new NoteKeeperOpenHelper(this);
+
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -71,6 +77,8 @@ public class MainActivity extends AppCompatActivity
 
 
     private void initializeDisplayContent() {
+        //Load data from the database.
+        DataManager.loadFromDatabase(mDbOpenHelper);
 
         //Components we need for RecyclerView implementation / Initialization.
         // 1. LayoutManager
@@ -97,6 +105,7 @@ public class MainActivity extends AppCompatActivity
         //method to display notes. Set-up NotesAdapter and the LayoutManager to display Notes.
         mRecyclerItems.setLayoutManager(mNotesLayoutMgr);
         mRecyclerItems.setAdapter(mNoteRecyclerAdapter);
+
         selectNavigationMenuItem(R.id.nav_notes); //Highlight Notes as current selected-MenuItem.
     }
 
@@ -156,6 +165,13 @@ public class MainActivity extends AppCompatActivity
         } else {
             super.onBackPressed();
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        //we close DatabaseOpenHelper when activity is being destroyed.
+        mDbOpenHelper.close();
+        super.onDestroy();
     }
 
     @Override

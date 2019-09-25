@@ -1,5 +1,11 @@
 package com.pato.notekeeper;
 
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+
+import com.pato.notekeeper.NoteKeeperDBContract.CourseInfoEntry;
+import com.pato.notekeeper.NoteKeeperDBContract.NoteInfoEntry;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,12 +21,92 @@ public class DataManager {
 
     //create a singleton instance of DataManager.
     public static DataManager getInstance() {
-        if(ourInstance == null) {
+        if (ourInstance == null) {
             ourInstance = new DataManager();
-            ourInstance.initializeCourses();
-            ourInstance.initializeExampleNotes();
+
+            //initializing data from transient memory data.
+            //ourInstance.initializeCourses();
+            //ourInstance.initializeExampleNotes();
+
+            /** Initialize data from database. */
         }
         return ourInstance;
+    }
+
+    public static void loadFromDatabase(NoteKeeperOpenHelper dbHelper) {
+        // Load data from Database.
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+
+        //query courses from the Database.
+        final String[] courseColumns = {
+                CourseInfoEntry.COLUMN_COURSE_ID,
+                CourseInfoEntry.COLUMN_COURSE_TITLE};
+
+        //get courses from database order by course title.
+        Cursor courseCursor = db.query(CourseInfoEntry.TABLE_NAME, courseColumns, null, null, null, null, CourseInfoEntry.COLUMN_COURSE_TITLE + " DESC");
+
+        loadCoursesFromDB(courseCursor);  //get data from database and populate the mcourses List
+
+        //query notes from the database.
+        final String[] noteColumns = {
+                NoteInfoEntry.COLUMN_COURSE_ID,
+                NoteInfoEntry.COLUMN_NOTE_TITLE,
+                NoteInfoEntry.COLUMN_NOTE_TEXT};
+
+        String noteOrderBy = NoteInfoEntry.COLUMN_COURSE_ID + "," + NoteInfoEntry.COLUMN_NOTE_TITLE;
+        //Order notes by multiple columns. course is the primary sort, then order note title within course.
+        Cursor noteCursor = db.query(NoteInfoEntry.TABLE_NAME, noteColumns, null, null, null, null, noteOrderBy);
+        loadNotesFromDB(noteCursor); //get data from database and populate the notes List
+
+    }
+
+    private static void loadNotesFromDB(Cursor cursor) {
+        //get index position of the columns
+        int noteTitlePos = cursor.getColumnIndex(NoteInfoEntry.COLUMN_NOTE_TITLE);
+        int noteTextPos = cursor.getColumnIndex(NoteInfoEntry.COLUMN_NOTE_TEXT);
+        int courseIdPos = cursor.getColumnIndex(NoteInfoEntry.COLUMN_COURSE_ID);
+
+        //Get DataManager Instance we can't use this in static context.
+        DataManager dm = getInstance();
+        dm.mNotes.clear();  //clear notes list.
+
+        //loop through results to get all notes and save them to notes_list.
+        while (cursor.moveToNext()) {
+            String noteTitle = cursor.getString(noteTitlePos);
+            String noteText = cursor.getString(noteTextPos);
+            String courseId = cursor.getString(courseIdPos);
+
+            CourseInfo noteCourse = dm.getCourse(courseId);
+            NoteInfo note = new NoteInfo(noteCourse, noteTitle, noteText);
+
+            dm.mNotes.add(note);  //add to Note_list
+
+        }
+
+        cursor.close();  //close cursor when done with using it.
+
+    }
+
+    private static void loadCoursesFromDB(Cursor cursor) {
+        //get index position of the columns.
+        int courseIdPos = cursor.getColumnIndex(CourseInfoEntry.COLUMN_COURSE_ID);
+        int courseTitlePos = cursor.getColumnIndex(CourseInfoEntry.COLUMN_COURSE_TITLE);
+
+        DataManager dm = getInstance();
+        dm.mCourses.clear();  //clear list to get fresh copy.
+
+        //Loop through result and get all data.
+        while (cursor.moveToNext()) {
+            String courseId = cursor.getString(courseIdPos);
+            String courseTitle = cursor.getString(courseTitlePos);
+            CourseInfo course = new CourseInfo(courseId, courseTitle, null);
+
+            dm.mCourses.add(course);  //add course to List.
+
+        }
+
+        cursor.close();  //close cursor when done.
+
     }
 
     public String getCurrentUserName() {
@@ -53,8 +139,8 @@ public class DataManager {
     }
 
     public int findNote(NoteInfo note) {
-        for(int index = 0; index < mNotes.size(); index++) {
-            if(note.equals(mNotes.get(index)))
+        for (int index = 0; index < mNotes.size(); index++) {
+            if (note.equals(mNotes.get(index)))
                 return index;
         }
 
@@ -79,8 +165,8 @@ public class DataManager {
 
     public List<NoteInfo> getNotes(CourseInfo course) {
         ArrayList<NoteInfo> notes = new ArrayList<>();
-        for(NoteInfo note:mNotes) {
-            if(course.equals(note.getCourse()))
+        for (NoteInfo note : mNotes) {
+            if (course.equals(note.getCourse()))
                 notes.add(note);
         }
         return notes;
@@ -88,8 +174,8 @@ public class DataManager {
 
     public int getNoteCount(CourseInfo course) {
         int count = 0;
-        for(NoteInfo note:mNotes) {
-            if(course.equals(note.getCourse()))
+        for (NoteInfo note : mNotes) {
+            if (course.equals(note.getCourse()))
                 count++;
         }
         return count;
@@ -209,7 +295,7 @@ public class DataManager {
     }
 
     //initialize the courses -end------------------
-     
+
     //endregion
 
 }
