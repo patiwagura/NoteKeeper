@@ -51,9 +51,10 @@ public class DataManager {
         final String[] noteColumns = {
                 NoteInfoEntry.COLUMN_COURSE_ID,
                 NoteInfoEntry.COLUMN_NOTE_TITLE,
-                NoteInfoEntry.COLUMN_NOTE_TEXT};
+                NoteInfoEntry.COLUMN_NOTE_TEXT,
+                NoteInfoEntry._ID};
 
-        String noteOrderBy = NoteInfoEntry.COLUMN_COURSE_ID + "," + NoteInfoEntry.COLUMN_NOTE_TITLE;
+        String noteOrderBy = NoteInfoEntry.COLUMN_COURSE_ID + ", " + NoteInfoEntry.COLUMN_NOTE_TITLE;
         //Order notes by multiple columns. course is the primary sort, then order note title within course.
         Cursor noteCursor = db.query(NoteInfoEntry.TABLE_NAME, noteColumns, null, null, null, null, noteOrderBy);
         loadNotesFromDB(noteCursor); //get data from database and populate the notes List
@@ -65,6 +66,7 @@ public class DataManager {
         int noteTitlePos = cursor.getColumnIndex(NoteInfoEntry.COLUMN_NOTE_TITLE);
         int noteTextPos = cursor.getColumnIndex(NoteInfoEntry.COLUMN_NOTE_TEXT);
         int courseIdPos = cursor.getColumnIndex(NoteInfoEntry.COLUMN_COURSE_ID);
+        int columnIdPos = cursor.getColumnIndex(NoteInfoEntry._ID);  //index of the _ID COLUMN
 
         //Get DataManager Instance we can't use this in static context.
         DataManager dm = getInstance();
@@ -75,9 +77,10 @@ public class DataManager {
             String noteTitle = cursor.getString(noteTitlePos);
             String noteText = cursor.getString(noteTextPos);
             String courseId = cursor.getString(courseIdPos);
+            int columnId = cursor.getInt(columnIdPos); //unique id associated with each Row.
 
             CourseInfo noteCourse = dm.getCourse(courseId);
-            NoteInfo note = new NoteInfo(noteCourse, noteTitle, noteText);
+            NoteInfo note = new NoteInfo(columnId, noteCourse, noteTitle, noteText);
 
             dm.mNotes.add(note);  //add to Note_list
 

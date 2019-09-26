@@ -38,7 +38,7 @@ public final class NoteKeeperDBContract {
                 _ID + " INTEGER PRIMARY KEY, " +
                 COLUMN_NOTE_TITLE + " TEXT NOT NULL, " +
                 COLUMN_NOTE_TEXT + " TEXT, " +
-                COLUMN_COURSE_ID + "TEXT NOT NULL)";
+                COLUMN_COURSE_ID + " TEXT NOT NULL)";
 
     }
 

@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity
         //instance to DatabaseOpenHelper. Interacting with Database is resource intensive.
         mDbOpenHelper = new NoteKeeperOpenHelper(this);
 
-        FloatingActionButton fab = findViewById(R.id.fab);
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -64,8 +64,8 @@ public class MainActivity extends AppCompatActivity
         // False :- only use default when preference value is not set.
         PreferenceManager.setDefaultValues(this, R.xml.root_preferences, false);
 
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        NavigationView navigationView = findViewById(R.id.nav_view);
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
@@ -149,8 +149,8 @@ public class MainActivity extends AppCompatActivity
 
         //Retrieve saved values from Preferences. pref_key :- key that was used to save the preference.
         // default_value :- default value in-case the user has not set value.
-        String userName = pref.getString("user_display_name", "");
-        String emailAddress = pref.getString("user_email_address", "");
+        String userName = pref.getString("user_display_name", "Default-UserName");
+        String emailAddress = pref.getString("user_email_address", "Default-Email");
 
         //set values to the TestViews
         txtUserName.setText(userName);

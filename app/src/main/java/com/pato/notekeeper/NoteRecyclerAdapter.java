@@ -37,8 +37,8 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
         //// bind data to view-items. This method is called by RecyclerView to request for data to display at the specified position.
         NoteInfo note = mNotes.get(position);  //get note at position.
         viewHolder.mTextCourse.setText(note.getCourse().getTitle()); //set courseTitle.
-        viewHolder.mTextCourse.setText(note.getTitle());
-        viewHolder.mCurrentPosition = position; //setting position of data-item in the list.
+        viewHolder.mTextTitle.setText(note.getTitle());
+        viewHolder.mPkId = note.getId();  //get unique-ID associated with a database record.
 
     }
 
@@ -54,7 +54,7 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
         //make the fields public to be accessed by outer-class.
         public final TextView mTextCourse;
         public final TextView mTextTitle;
-        public int mCurrentPosition;  //set each time a view-item is associated with a viewHolder.
+        public int mPkId;  //unique id e.g position / index set each time a view-item is associated with a viewHolder.
 
         //constructor matching super.
         public ViewHolder(@NonNull View itemView) {
@@ -67,7 +67,7 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
                 @Override
                 public void onClick(View v) {
                     Intent myIntent = new Intent(mContext, NoteActivity.class);
-                    myIntent.putExtra(NoteActivity.NOTE_POSITION, mCurrentPosition);  //current position of selected data-item.
+                    myIntent.putExtra(NoteActivity.NOTE_ID, mPkId);  //current position of selected data-item.
                     mContext.startActivity(myIntent);
                 }
             });

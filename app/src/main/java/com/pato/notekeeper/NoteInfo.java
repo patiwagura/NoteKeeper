@@ -13,7 +13,16 @@ public final class NoteInfo implements Parcelable {
     private CourseInfo mCourse;
     private String mTitle;
     private String mText;
+    private int mId;  //unique primary-Key ID associated with a record / Row.
 
+    public NoteInfo(int pkId, CourseInfo course, String title, String text) {
+        mId = pkId;  //unique primary-Key id associated with each Record in the database.
+        mCourse = course;
+        mTitle = title;
+        mText = text;
+    }
+
+    //constructor to take 3 parameters.
     public NoteInfo(CourseInfo course, String title, String text) {
         mCourse = course;
         mTitle = title;
@@ -26,6 +35,17 @@ public final class NoteInfo implements Parcelable {
         mCourse = parcelSource.readParcelable(CourseInfo.class.getClassLoader()); //CLASS Loader provides information to create instance of a type.
         mTitle = parcelSource.readString(); //read title from parcel.
         mText = parcelSource.readString(); //read text from parcel.
+    }
+
+    public int getId() {
+        return mId;
+    }
+
+    /**
+     * @param id Unique primary key associated with each record / row in the table.
+     */
+    public void setId(int id) {
+        mId = id;
     }
 
     public CourseInfo getCourse() {
@@ -94,7 +114,7 @@ public final class NoteInfo implements Parcelable {
 
     //code to recreate this class_instance<NoteInfo> from the parcel.
     //Note: Read parcel values in the same order they were written.
-    public static final Parcelable.Creator<NoteInfo> CREATOR = new Parcelable.Creator<NoteInfo>(){
+    public static final Parcelable.Creator<NoteInfo> CREATOR = new Parcelable.Creator<NoteInfo>() {
 
         @Override
         public NoteInfo createFromParcel(Parcel parcelSource) {

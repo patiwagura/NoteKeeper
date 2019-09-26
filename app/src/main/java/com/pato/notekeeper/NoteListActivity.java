@@ -52,10 +52,10 @@ public class NoteListActivity extends AppCompatActivity {
                 //show the item selected from the ListView.
                 Intent mIntent = new Intent(NoteListActivity.this, NoteActivity.class);
                 //NoteInfo note = (NoteInfo) listNotes.getItemAtPosition(position); //get the item selected from ListView.
-                //mIntent.putExtra(NoteActivity.NOTE_POSITION, note);  //passing NoteInfo reference as an intent extra
+                //mIntent.putExtra(NoteActivity.NOTE_ID, note);  //passing NoteInfo reference as an intent extra
 
                 //Logic changed. Earlier we created intent, retrieved our note at selected_position, then passed the reference of Note_object as an intent Extra.
-                mIntent.putExtra(NoteActivity.NOTE_POSITION, position);  //pass position of selected item and let DataManager retrieve our Note.
+                mIntent.putExtra(NoteActivity.NOTE_ID, position);  //pass position of selected item and let DataManager retrieve our Note.
                 startActivity(mIntent);
 
             }
