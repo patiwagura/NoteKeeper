@@ -2,6 +2,7 @@ package com.pato.notekeeper;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 
@@ -21,6 +22,7 @@ import androidx.appcompat.app.ActionBarDrawerToggle;
 import android.view.MenuItem;
 
 import com.google.android.material.navigation.NavigationView;
+import com.pato.notekeeper.NoteKeeperDBContract.NoteInfoEntry;
 
 import androidx.drawerlayout.widget.DrawerLayout;
 
@@ -90,9 +92,11 @@ public class MainActivity extends AppCompatActivity
         mCoursesLayoutMgr = new GridLayoutManager(this,
                 getResources().getInteger(R.integer.course_grid_span));
 
-        //Initialize Notes-List and Notes_Adapter.
-        List<NoteInfo> notes = DataManager.getInstance().getNotes();
-        mNoteRecyclerAdapter = new NoteRecyclerAdapter(this, notes);  //create the Recycler-Adapter.
+
+        //List<NoteInfo> notes = DataManager.getInstance().getNotes();  //initialize notes-List from dataManager.
+
+        //Initialize NoteRecyclerAdapter.
+        mNoteRecyclerAdapter = new NoteRecyclerAdapter(this, null);  //create the Recycler-Adapter.
 
         //Initialize courses and course-Adapter.
         List<CourseInfo> courses = DataManager.getInstance().getCourses();
@@ -129,10 +133,29 @@ public class MainActivity extends AppCompatActivity
     protected void onResume() {
         super.onResume();
         //Notify RecyclerAdapter datachanged, refresh our data every time we resume activity.
-        mNoteRecyclerAdapter.notifyDataSetChanged();
+        //mNoteRecyclerAdapter.notifyDataSetChanged();
+
+        //Load new data from Database.
+        loadNotes();
 
         //method to update the NavHeader, its called when user returns from SettingsScreen and every time we return to activity.
         updateNavHeader();
+    }
+
+    private void loadNotes() {
+        SQLiteDatabase db = mDbOpenHelper.getReadableDatabase();  //get db connection.
+
+        //columns to return from database.
+        final String[] noteColumns = {NoteInfoEntry.COLUMN_NOTE_TITLE,
+                NoteInfoEntry.COLUMN_COURSE_ID,
+                NoteInfoEntry._ID};
+
+        String noteOrderBy = NoteInfoEntry.COLUMN_COURSE_ID + "," + NoteInfoEntry.COLUMN_NOTE_TITLE;
+        final Cursor noteCursor = db.query(NoteInfoEntry.TABLE_NAME, noteColumns,
+                null, null, null, null, noteOrderBy);
+
+        //associate cursor with RecyclerView Adapter.
+        mNoteRecyclerAdapter.changeCursor(noteCursor);
     }
 
     private void updateNavHeader() {
@@ -141,8 +164,8 @@ public class MainActivity extends AppCompatActivity
         View headerView = navView.getHeaderView(0);
 
         //get textViews references from HeaderView.
-        TextView txtUserName = (TextView)headerView.findViewById(R.id.text_user_name);
-        TextView txtEmailAddress = (TextView)headerView.findViewById(R.id.text_email_address);
+        TextView txtUserName = (TextView) headerView.findViewById(R.id.text_user_name);
+        TextView txtEmailAddress = (TextView) headerView.findViewById(R.id.text_email_address);
 
         //Reading values from SharedPreference we need a reference to SharedPreference
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
@@ -230,7 +253,7 @@ public class MainActivity extends AppCompatActivity
         //method to interact with Social preferences
         View view = findViewById(R.id.recycler_list_items);
         Snackbar.make(view, "Share to - " +
-                PreferenceManager.getDefaultSharedPreferences(this).getString("user_favorite_social",""),
+                        PreferenceManager.getDefaultSharedPreferences(this).getString("user_favorite_social", ""),
                 Snackbar.LENGTH_LONG).show();
     }
 
