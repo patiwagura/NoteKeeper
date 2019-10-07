@@ -284,17 +284,22 @@ public class MainActivity extends AppCompatActivity
                 public Cursor loadInBackground() {
                     SQLiteDatabase db = mDbOpenHelper.getReadableDatabase(); //get db connection.
                     final String[] noteColumns = {
-                            NoteInfoEntry._ID,
+                            //table-qualify column-names used in both tables. To specify from which table we get the column.
+                            NoteInfoEntry.getQName(NoteInfoEntry._ID),
                             NoteInfoEntry.COLUMN_NOTE_TITLE,
-                            NoteInfoEntry.COLUMN_COURSE_ID};
+                            //NoteInfoEntry.getQName(NoteInfoEntry.COLUMN_COURSE_ID),
+                            CourseInfoEntry.COLUMN_COURSE_TITLE
+                    };
 
-                    final String noteOrderBy = NoteInfoEntry.COLUMN_COURSE_ID + "," + NoteInfoEntry.COLUMN_NOTE_TITLE;
+                    //specify columns to order results returned from query. Sorting by course_title followed by Note_title.
+                    final String noteOrderBy = CourseInfoEntry.COLUMN_COURSE_TITLE +
+                            "," + NoteInfoEntry.COLUMN_NOTE_TITLE;
 
                     //note_info JOIN course_info ON note_info.course_id = course_info.course_id
                     String tablesWithJoin = NoteInfoEntry.TABLE_NAME + " JOIN "
                             + CourseInfoEntry.TABLE_NAME + " ON " +
-                            NoteInfoEntry.TABLE_NAME + "." + NoteInfoEntry.COLUMN_COURSE_ID + " = " +
-                            CourseInfoEntry.TABLE_NAME + "." + CourseInfoEntry.COLUMN_COURSE_ID;
+                            NoteInfoEntry.getQName(NoteInfoEntry.COLUMN_COURSE_ID) + " = " +
+                            CourseInfoEntry.getQName(CourseInfoEntry.COLUMN_COURSE_ID);
 
                     return db.query(tablesWithJoin, noteColumns,
                             null, null, null, null, noteOrderBy);

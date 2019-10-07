@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModelProvider;
 //import android.content.CursorLoader;
 //import android.content.Loader;
 
+import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -380,9 +381,43 @@ public class NoteActivity extends AppCompatActivity
 
     private void saveNote() {
         //save details of current selected note from our app.
-        mSelectedNote.setCourse((CourseInfo) mSpinnerCourses.getSelectedItem());  //currently selected course on our spinner.
-        mSelectedNote.setTitle(mTxtNoteTitle.getText().toString());
-        mSelectedNote.setText(mTxtNoteText.getText().toString());
+//        mSelectedNote.setCourse((CourseInfo) mSpinnerCourses.getSelectedItem());  //currently selected course on our spinner.
+//        mSelectedNote.setTitle(mTxtNoteTitle.getText().toString());
+//        mSelectedNote.setText(mTxtNoteText.getText().toString());
+
+        //save selected note-data to database.
+        String courseId = selectedCourseId();
+        String noteTitle = mTxtNoteTitle.getText().toString();
+        String noteText = mTxtNoteText.getText().toString();
+
+        saveNoteToDB(courseId, noteTitle, noteText);
+
+    }
+
+    private String selectedCourseId() {
+        //mSpinnerCourses displays the courseTitle, we need to get the courseId for the selected course.
+        int selectedPosition = mSpinnerCourses.getSelectedItemPosition();  //position of selected item.
+        Cursor cursor = mAdapterCourses.getCursor(); //cursor used to populate spinner.
+        cursor.moveToPosition(selectedPosition);
+        int courseIdPos = cursor.getColumnIndex(CourseInfoEntry.COLUMN_COURSE_ID);  //zero-based column index position.
+        String courseId = cursor.getString(courseIdPos); //get courseId value from db.
+
+        return courseId;
+    }
+
+    private void saveNoteToDB(String courseId, String noteTitle, String noteText) {
+        String selection = NoteInfoEntry._ID + " = ?";
+        String[] selectionArgs = {Integer.toString(mNoteId)};
+
+        //column names & values to change.
+        ContentValues values = new ContentValues();
+        values.put(NoteInfoEntry.COLUMN_COURSE_ID, courseId);
+        values.put(NoteInfoEntry.COLUMN_NOTE_TITLE, noteTitle);
+        values.put(NoteInfoEntry.COLUMN_NOTE_TEXT, noteText);
+
+        //get DB connection.
+        SQLiteDatabase db = mDbOpenHelper.getWritableDatabase();
+        db.update(NoteInfoEntry.TABLE_NAME, values, selection, selectionArgs);
     }
 
     private void sendEmail() {

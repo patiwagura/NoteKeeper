@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.pato.notekeeper.NoteKeeperDBContract.CourseInfoEntry;
 import com.pato.notekeeper.NoteKeeperDBContract.NoteInfoEntry;
 
 import java.util.List;
@@ -44,7 +45,7 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
             return;
 
         //Get column indexes from mCursor.
-        mCoursePos = mCursor.getColumnIndex(NoteInfoEntry.COLUMN_COURSE_ID);
+        mCoursePos = mCursor.getColumnIndex(CourseInfoEntry.COLUMN_COURSE_TITLE);
         mNoteTitlePos = mCursor.getColumnIndex(NoteInfoEntry.COLUMN_NOTE_TITLE);
         mIdPos = mCursor.getColumnIndex(NoteInfoEntry._ID);
     }
@@ -74,18 +75,22 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
     public void onBindViewHolder(@NonNull ViewHolder viewHolder, int position) {
         //Bind data to view-items. This method is called by RecyclerView to request for data at the specified position.
 
-        //move cursor to required position.
-        mCursor.moveToPosition(position);
+        if (!mCursor.isClosed()) {
+            //move cursor to required position.
+            mCursor.moveToPosition(position);
 
-        //get actual values to display.
-        String course = mCursor.getString(mCoursePos);
-        String noteTitle = mCursor.getString(mNoteTitlePos);
-        int id = mCursor.getInt(mIdPos);
+            //get actual values to display.
+            String course = mCursor.getString(mCoursePos);
+            String noteTitle = mCursor.getString(mNoteTitlePos);
+            int id = mCursor.getInt(mIdPos);
 
-        //display data to the user.
-        viewHolder.mTextCourse.setText(course);
-        viewHolder.mTextTitle.setText(noteTitle);
-        viewHolder.mPkId = id;
+
+            //display data to the user.
+            viewHolder.mTextCourse.setText(course);
+            viewHolder.mTextTitle.setText(noteTitle);
+            viewHolder.mPkId = id;
+        }
+
 
         //
         //NoteInfo note = mNotes.get(position);  //get note at position.
