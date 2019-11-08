@@ -12,6 +12,8 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -31,6 +33,7 @@ import android.widget.Spinner;
 
 import com.pato.notekeeper.NoteKeeperDBContract.CourseInfoEntry;
 import com.pato.notekeeper.NoteKeeperDBContract.NoteInfoEntry;
+import com.pato.notekeeper.NoteKeeperProviderContract.Courses;
 
 import java.util.List;
 
@@ -77,7 +80,7 @@ public class NoteActivity extends AppCompatActivity
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        //Database Open Helper must be created Activity's onCreate and closed when activity is destroyed.
+        //Database OpenHelper must be created on Activity's onCreate and closed when activity is destroyed.
         mDbOpenHelper = new NoteKeeperOpenHelper(this);
 
         //ViewModel is managed by ViewModelProvider.
@@ -118,6 +121,7 @@ public class NoteActivity extends AppCompatActivity
         //loadCourseData();
 
         //Using a loader to perform Long-running operations in a separate thread.
+        //getClassLoader().initLoader(LOADER_COURSES, null, this);  //--deprecated method.
         LoaderManager.getInstance(this).initLoader(LOADER_COURSES, null, this);
 
 
@@ -284,10 +288,21 @@ public class NoteActivity extends AppCompatActivity
 
     //create a new note.
     private void createNewNote() {
-        DataManager dm = DataManager.getInstance(); //get instance.
+        //DataManager dm = DataManager.getInstance(); //get instance.
         //create a new note and return its position.
-        mNoteId = dm.createNewNote();
+        //mNoteId = dm.createNewNote();
         //mSelectedNote = dm.getNotes().get(mNoteId); //retrive not from List using index_notePosition.
+
+        //Insert newNote to Database. We use empty-String place holders for the newNote as we don't know the actual values.
+        ContentValues values = new ContentValues();
+        values.put(NoteInfoEntry.COLUMN_COURSE_ID, "");
+        values.put(NoteInfoEntry.COLUMN_NOTE_TITLE, "");
+        values.put(NoteInfoEntry.COLUMN_NOTE_TEXT, "");
+
+        //get db connection.
+        SQLiteDatabase db = mDbOpenHelper.getWritableDatabase();
+        //Insert record to db and obtain newNote_ID that is used to update the record.
+        mNoteId = (int) db.insert(NoteInfoEntry.TABLE_NAME, null, values);
 
     }
 
@@ -347,17 +362,43 @@ public class NoteActivity extends AppCompatActivity
         //when user exits Activity by hitting Back_button, we save changes made by user.
         if (mIsCancelling) {
             Log.i(TAG, "Cancelling note at position : " + mNoteId);
-            //user want to exit without saving changes.
+            //Don't save the changes to New Note.
             if (mIsNewNote) {
-                DataManager.getInstance().removeNote(mNoteId);//remove newNote_position if user cancels in the process of creating a new note.
+                //discard the New Note that was being created. Remove backing store for the note from the database.
+                //DataManager.getInstance().removeNote(mNoteId);
+
+                deleteNoteFromDB();
+
             } else {
                 //restore Previous note values ie original note before change.
                 restorePreviousNoteValues();
             }
         } else {
-            saveNote(); //save any changes.
+            saveNote(); //Save changes made to Note / New_Note.
         }
         Log.d(TAG, "onPause");
+
+    }
+
+    private void deleteNoteFromDB() {
+        //we have discarded the NewNote, delete it from database.
+        final String selection = NoteInfoEntry._ID + " = ?";  //ID of the Note to delete.
+        final String[] selectionArgs = {Integer.toString(mNoteId)};
+
+        //using Async Task to perform database operation in a non-UI Thread.
+        AsyncTask task = new AsyncTask() {
+            @Override
+            protected Object doInBackground(Object[] objects) {
+                //database connection.
+                SQLiteDatabase db = mDbOpenHelper.getWritableDatabase();
+                db.delete(NoteInfoEntry.TABLE_NAME, selection, selectionArgs);
+
+                return null;
+            }
+        };
+
+        //perform DB Operation in a non-UI Thread.
+        task.execute();
 
     }
 
@@ -422,6 +463,9 @@ public class NoteActivity extends AppCompatActivity
 
     private void sendEmail() {
         //the email should have a title/subject & body /message.
+        Object ob = mSpinnerCourses.getSelectedItem();
+        Log.d(TAG, "Spinner Selected Object: " + ob.toString());
+
         CourseInfo eCourse = (CourseInfo) mSpinnerCourses.getSelectedItem(); //get selected course.
         String emSubject = mTxtNoteTitle.getText().toString();  //get Title of the course.
         String emBody = "Checkout what I learned in the pluralsight course \"" +
@@ -438,7 +482,9 @@ public class NoteActivity extends AppCompatActivity
     @Override
     public Loader<Cursor> onCreateLoader(int id, @Nullable Bundle args) {
         //Creates a Cursor Loader that knows how to issue Database queries.
+        //Method called when we call LoaderManager.initLoader()
         CursorLoader loader = null;
+
         if (id == LOADER_NOTES) {
             loader = createLoaderNotes();
         } else if (id == LOADER_COURSES) {
@@ -454,26 +500,43 @@ public class NoteActivity extends AppCompatActivity
         //boolean to monitor when query has finished loading data.
         mCoursesQueryFinished = false;
 
-        //create an instance of a new CursorLoader and return it back.
-        return new CursorLoader(this) {
-            @Override
-            public Cursor loadInBackground() {
-                //perform work to create the courses cursor.
-                SQLiteDatabase db = mDbOpenHelper.getReadableDatabase(); //get database connection.
+        //query the ContentProvider which will then query the SQLite-DB and return results.
+        //Uri uriContent = Uri.parse("content://com.pato.notekeeper.provider");  //ContentProvider uri Identifier
+        Uri uriContent = Courses.CONTENT_URI;  //getting CoursesTable_uri from contentProvider.
 
-                //List of columns to be returned in the query.
-                String[] courseColumns = {
-                        CourseInfoEntry.COLUMN_COURSE_TITLE,
-                        CourseInfoEntry.COLUMN_COURSE_ID,
-                        CourseInfoEntry._ID
-                };
-
-                //query the database, return results to a cursor.
-                return db.query(CourseInfoEntry.TABLE_NAME, courseColumns,
-                        null, null, null, null, CourseInfoEntry.COLUMN_COURSE_TITLE);
-
-            }
+        //List of columns to be returned in the query. (using constants from ContentProvider).
+        String[] courseColumns = {
+                //CourseInfoEntry.COLUMN_COURSE_TITLE,  //constants from DBContract class => replaced with ContentProvider constants.
+                Courses.COLUMN_COURSE_TITLE,
+                Courses.COLUMN_COURSE_ID,
+                Courses._ID
         };
+
+        //Using a CursorLoader to query the ContentProvider. Note:CursorLoader uses uri to identify the ContentProvider.
+        return new CursorLoader(this, uriContent, courseColumns, null, null, Courses.COLUMN_COURSE_TITLE);
+
+        //create an instance of a new CursorLoader and return it back.
+        //Code was used to query the SQLite Database before contentProvider was implemented.
+        /**
+         return new CursorLoader(this) {
+        @Override public Cursor loadInBackground() {
+        //perform work to create the courses cursor.
+        SQLiteDatabase db = mDbOpenHelper.getReadableDatabase(); //get database connection.
+
+        //List of columns to be returned in the query.
+        String[] courseColumns = {
+        CourseInfoEntry.COLUMN_COURSE_TITLE,
+        CourseInfoEntry.COLUMN_COURSE_ID,
+        CourseInfoEntry._ID
+        };
+
+        //query the SQLite_database and return cursor containing the results.
+        return db.query(CourseInfoEntry.TABLE_NAME, courseColumns,
+        null, null, null, null, CourseInfoEntry.COLUMN_COURSE_TITLE);
+
+
+        }
+        };  */
     }
 
     private CursorLoader createLoaderNotes() {

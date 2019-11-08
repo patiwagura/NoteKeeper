@@ -29,6 +29,7 @@ import android.view.MenuItem;
 import com.google.android.material.navigation.NavigationView;
 import com.pato.notekeeper.NoteKeeperDBContract.CourseInfoEntry;
 import com.pato.notekeeper.NoteKeeperDBContract.NoteInfoEntry;
+import com.pato.notekeeper.NoteKeeperProviderContract.Notes;
 
 import androidx.drawerlayout.widget.DrawerLayout;
 
@@ -276,6 +277,37 @@ public class MainActivity extends AppCompatActivity
     @NonNull
     @Override
     public Loader<Cursor> onCreateLoader(int id, @Nullable Bundle args) {
+        //----start   ContentProvider implementation.
+        CursorLoader loader = null;
+
+        if (id == LOADER_NOTES) {
+            final String[] noteColumns = {
+                    //Table-qualify column-names defined/appears in both tables to specify from which table we get the column.
+                    Notes._ID,  //ContentProvider will take care of Table_qualifying column name appearing in both tables.
+                    Notes.COLUMN_NOTE_TITLE,
+                    Notes.COLUMN_COURSE_TITLE
+            };
+
+            //specify columns to order results returned from query. Sorting by course_title followed by Note_title.
+            final String noteOrderBy = Notes.COLUMN_COURSE_TITLE +
+                    "," + Notes.COLUMN_NOTE_TITLE;
+
+            loader = new CursorLoader(this, Notes.CONTENT_EXPANDED_URI, noteColumns, null, null, noteOrderBy);
+
+        }
+
+        //-------End ContentProvider implementation.
+
+        //This method was used before we implemented ContentProvider.
+        //Note: It's simpler to issue a query using a ContentProvider.
+        //return useCreateLoader(id,args);
+
+        return loader;
+    }
+
+    //method used before we implemented the contentProvider.
+    //This method was replaced by the ContentProvider implementation.
+    public CursorLoader useCreateLoader(int id, @Nullable Bundle args) {
         CursorLoader loader = null;
 
         if (id == LOADER_NOTES) {

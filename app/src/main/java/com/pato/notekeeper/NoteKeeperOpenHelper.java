@@ -10,7 +10,7 @@ import com.pato.notekeeper.NoteKeeperDBContract.NoteInfoEntry;
 public class NoteKeeperOpenHelper extends SQLiteOpenHelper {
     //constants
     public static final String DATABASE_NAME = "NoteKeeper.db";
-    public static final int DATABASE_VERSION = 2;  //Version_1 DB contained only tables, We created indexes in Version_2.
+    public static final int DATABASE_VERSION = 2;  //DataBase Version_1 contained only tables, We created indexes in Version_2.
 
     //constructor.
     public NoteKeeperOpenHelper(Context context) {
